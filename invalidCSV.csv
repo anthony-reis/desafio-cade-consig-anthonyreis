@@ -1,0 +1,5 @@
+ID;User_Name;Contato;Plano;Preço;Ativo
+1;João Silva;joao@email.com;Premium;99.90;Sim
+2;Maria Souza;;Basic;grátis;Não
+3;Carlos Oliveira;carlos.oliver@web;Master;150;2023-01-15
+4;Ana Costa;ana@email.com;Gold;vinte reais;True
