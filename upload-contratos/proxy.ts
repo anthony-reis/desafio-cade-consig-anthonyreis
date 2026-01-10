@@ -1,77 +1,60 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getIronSession } from "iron-session";
+import { sessionOptions, SessionData } from "@/lib/session/session";
 import { jwtDecode } from "jwt-decode";
-import { NextRequest, NextResponse, type MiddlewareConfig } from "next/server";
-import { DecodedToken } from "./lib/types/decodedToken";
 
-const publicRoutes = [
-  { path: "/sign-in", whenAuthenticated: "redirect" },
-  { path: "/upload", whenAuthenticated: "next" },
-  { path: "", whenAuthenticated: "next" },
-] as const;
+interface DecodedToken {
+  exp: number;
+}
 
-const REDIRECT_WHEN_NOT_AUTHENTICADED_ROUTE = "/sign-in";
+const publicPaths = ["/sign-in"];
+const REDIRECT_WHEN_NOT_AUTHENTICATED = "/sign-in";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const publicRoute = publicRoutes.find((route) => route.path === path);
-  const accessToken = request.cookies.get("access_token")?.value;
+  const isPublicPath = publicPaths.includes(path);
 
-  if (!accessToken && publicRoute) {
-    return NextResponse.next();
-  }
+  const response = NextResponse.next();
+  const session = await getIronSession<SessionData>(
+    request,
+    response,
+    sessionOptions
+  );
 
-  if (!accessToken && !publicRoute) {
-    const signInUrl = new URL(
-      REDIRECT_WHEN_NOT_AUTHENTICADED_ROUTE,
-      request.url
+  const isLoggedIn = session.isLoggedIn && session.accessToken;
+
+  if (!isLoggedIn && !isPublicPath) {
+    return NextResponse.redirect(
+      new URL(REDIRECT_WHEN_NOT_AUTHENTICATED, request.url)
     );
-    return NextResponse.redirect(signInUrl);
   }
 
-  if (
-    accessToken &&
-    publicRoute &&
-    publicRoute?.whenAuthenticated === "redirect"
-  ) {
-    const homeUrl = new URL("/", request.url);
-    return NextResponse.redirect(homeUrl);
+  if (isLoggedIn && isPublicPath) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (accessToken && !publicRoute) {
+  if (isLoggedIn) {
     try {
-      const decoded = jwtDecode<DecodedToken>(accessToken);
-
+      const decoded = jwtDecode<DecodedToken>(session.accessToken!);
       const currentTime = Math.floor(Date.now() / 1000);
 
       if (decoded.exp < currentTime) {
-        const response = NextResponse.redirect(
-          new URL(REDIRECT_WHEN_NOT_AUTHENTICADED_ROUTE, request.url)
+        session.destroy();
+        return NextResponse.redirect(
+          new URL(REDIRECT_WHEN_NOT_AUTHENTICATED, request.url)
         );
-        response.cookies.delete("accessToken");
-        return response;
       }
-
-      return NextResponse.next();
     } catch (error) {
-      const response = NextResponse.redirect(
-        new URL(REDIRECT_WHEN_NOT_AUTHENTICADED_ROUTE, request.url)
+      session.destroy();
+      return NextResponse.redirect(
+        new URL(REDIRECT_WHEN_NOT_AUTHENTICATED, request.url)
       );
-      response.cookies.delete("accessToken");
-      return response;
     }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
