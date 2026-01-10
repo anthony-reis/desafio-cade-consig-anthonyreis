@@ -10,23 +10,30 @@ interface DecodedToken {
 const publicPaths = ["/sign-in"];
 const REDIRECT_WHEN_NOT_AUTHENTICATED = "/sign-in";
 
+function redirectToLogin(request: NextRequest) {
+  return NextResponse.redirect(
+    new URL(REDIRECT_WHEN_NOT_AUTHENTICATED, request.url)
+  );
+}
+
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublicPath = publicPaths.includes(path);
 
-  const response = NextResponse.next();
+  const nextRes = NextResponse.next();
   const session = await getIronSession<SessionData>(
     request,
-    response,
+    nextRes,
     sessionOptions
   );
 
-  const isLoggedIn = session.isLoggedIn && session.accessToken;
+  const isLoggedIn = !!(session.isLoggedIn && session.accessToken);
 
   if (!isLoggedIn && !isPublicPath) {
-    return NextResponse.redirect(
-      new URL(REDIRECT_WHEN_NOT_AUTHENTICATED, request.url)
-    );
+    const res = redirectToLogin(request);
+    const s = await getIronSession<SessionData>(request, res, sessionOptions);
+    s.destroy();
+    return res;
   }
 
   if (isLoggedIn && isPublicPath) {
@@ -39,20 +46,24 @@ export async function proxy(request: NextRequest) {
       const currentTime = Math.floor(Date.now() / 1000);
 
       if (decoded.exp < currentTime) {
-        session.destroy();
-        return NextResponse.redirect(
-          new URL(REDIRECT_WHEN_NOT_AUTHENTICATED, request.url)
+        const res = redirectToLogin(request);
+        const s = await getIronSession<SessionData>(
+          request,
+          res,
+          sessionOptions
         );
+        s.destroy();
+        return res;
       }
-    } catch (error) {
-      session.destroy();
-      return NextResponse.redirect(
-        new URL(REDIRECT_WHEN_NOT_AUTHENTICATED, request.url)
-      );
+    } catch {
+      const res = redirectToLogin(request);
+      const s = await getIronSession<SessionData>(request, res, sessionOptions);
+      s.destroy();
+      return res;
     }
   }
 
-  return response;
+  return nextRes;
 }
 
 export const config = {
