@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useContratos } from "@/lib/hooks/use-contratos";
 import { useContratosFilters } from "@/lib/hooks/use-contratos-filters";
 import { ContratosHeader } from "@/components/contratos/contratos-header";
@@ -8,7 +9,16 @@ import { ContratosTable } from "@/components/contratos/contratos-table";
 import { ContratosPagination } from "@/components/contratos/contratos-pagination";
 
 export default function HomeClient() {
-  const { data: contratos = [], isLoading, refetch } = useContratos();
+  const {
+    data: contratos = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useContratos();
+
+  useEffect(() => {
+    refetch();
+  }, []);
 
   const {
     status,
@@ -36,7 +46,7 @@ export default function HomeClient() {
         <ContratosHeader
           totalContratos={contratos.length}
           onRefresh={refetch}
-          isRefreshing={isLoading}
+          isRefreshing={isFetching}
         />
 
         <ContratosFilters
@@ -52,7 +62,7 @@ export default function HomeClient() {
         <div className="w-full overflow-x-auto">
           <ContratosTable
             contratos={contratosPaginados}
-            isLoading={isLoading}
+            isLoading={isFetching}
             isEmpty={contratosPaginados.length === 0}
             emptyMessage={emptyMessage}
           />
