@@ -31,13 +31,13 @@ A entrega segue a estrutura solicitada, com a pasta `upload-contratos` contendo 
 
 ## Visão geral da solução
 
-A aplicação foi construída em Next.js (App Router) e organiza as rotas em dois grupos principais: rotas públicas (ex.: login) e rotas privadas (dashboard/listagem e upload).
+A aplicação foi construída em Next.js (App Router) e organiza as rotas em dois grupos principais: rotas públicas (sign-in) e rotas privadas (dashboard e upload).
 
 A comunicação com o backend é feita através de Route Handlers em `app/api/*`, que atuam como um “BFF” (Backend for Frontend): eles validam a sessão e encaminham as requisições para o backend Nest, anexando o token no header `Authorization`.
 
 ## Fluxo de autenticação e segurança com Iron Session
 
-A autenticação foi implementada com **iron-session** para evitar armazenar JWT no `localStorage` e manter o token fora do alcance do JavaScript no navegador.[web:2]
+A autenticação foi implementada com **iron-session** para evitar armazenar JWT no `localStorage` e manter o token fora do alcance do JavaScript no navegador.
 
 ### Como o token é salvo (login)
 
@@ -45,11 +45,11 @@ A autenticação foi implementada com **iron-session** para evitar armazenar JWT
 2. O frontend chama o endpoint do próprio Next: `POST /api/auth/login`.
 3. Esse route handler faz um `fetch` para o backend em `POST /login` e recebe `access_token`.
 4. O token é decodificado para obter dados do usuário (ex.: `sub` e `usuario`) e então é salvo na sessão: `session.accessToken = accessToken` e `session.isLoggedIn = true`, seguido de `await session.save()`.
-5. Ao salvar, o iron-session “sela” os dados da sessão e os persiste em um cookie no navegador. [web:2]
+5. Ao salvar, o iron-session “sela” os dados da sessão e os persiste em um cookie no navegador.
 
 ### Onde o token fica armazenado
 
-O `accessToken` fica armazenado no cookie de sessão configurado como `cookieName: "auth_session"`, com `httpOnly: true`, `sameSite: "strict"` e `secure` em produção, o que reduz o risco de vazamento por XSS e restringe o envio do cookie em cenários cross-site.[web:2]
+O `accessToken` fica armazenado no cookie de sessão configurado como `cookieName: "auth_session"`, com `httpOnly: true`, `sameSite: "strict"` e `secure` em produção, o que reduz o risco de vazamento por XSS e restringe o envio do cookie em cenários cross-site.
 
 O segredo de criptografia/assinatura do cookie vem de `process.env.SESSION_SECRET`, e a sessão tem `maxAge` configurado para 24 horas.
 
@@ -73,8 +73,8 @@ O logout chama `POST /api/auth/logout`, que executa `session.destroy()` para inv
 
 ### Por que essa abordagem é mais segura do que localStorage
 
-- Cookies `httpOnly` não podem ser lidos por JavaScript, então mesmo que exista uma falha XSS, o token não fica acessível via `window.localStorage`/`document.cookie`. [web:2]
-- A sessão é “stateless” e baseada em cookie (sem necessidade de banco para sessão), mantendo a implementação simples e adequada para o desafio. [web:2]
+- Cookies `httpOnly` não podem ser lidos por JavaScript, então mesmo que exista uma falha XSS, o token não fica acessível via `window.localStorage`/`document.cookie`.
+- A sessão é “stateless” e baseada em cookie (sem necessidade de banco para sessão), mantendo a implementação simples e adequada para o desafio.
 
 ## BFF (Route Handlers) e integração com o backend
 
@@ -93,7 +93,7 @@ Endpoints internos relevantes:
 
 Observação: no código atual, os route handlers encaminham para `http://localhost:3000/login`, `http://localhost:3000/contratos` e `http://localhost:3000/contratos/upload`.
 
-## Listagem: filtros, paginação e URL (Nuqs)
+## Dashboard: filtros, paginação e URL (Nuqs)
 
 A tela de listagem utiliza um hook dedicado para filtros e paginação, e o estado é sincronizado com a URL usando Nuqs (com `NuqsAdapter` habilitado no provider global).
 
@@ -117,6 +117,28 @@ Além disso, o botão de submit é desabilitado durante loading e o erro é exib
 A aplicação usa React Query para padronizar fetch e estados assíncronos no frontend, com `QueryClientProvider` configurado globalmente.
 
 A configuração inclui `staleTime` e desabilita `refetchOnWindowFocus` para evitar recarregamentos inesperados durante navegação.
+
+## Arquitetura Frontend: Services, Hooks e Axios
+
+A aplicação é organizada em camadas para manter o código simples e fácil de manter. Cada parte tem uma responsabilidade clara.
+O fluxo funciona assim:\
+→ Hook (use-\*)\
+→ Service\
+→ Axios\
+→ API do Next.js (/api)\
+→ Backend NestJS\
+
+Os componentes React cuidam apenas da tela. Eles mostram os dados e reagem às ações do usuário, sem fazer chamadas diretas para a API.
+
+Os hooks personalizados (use-\*) fazem a busca de dados e controlam estados como carregamento e erro. Eles usam o React Query, que ajuda com cache e atualização automática dos dados.
+
+Os services concentram as chamadas HTTP. Isso evita código repetido e facilita mudanças futuras, como trocar a forma de comunicação com a API.
+
+O Axios é configurado em um único lugar, com interceptors para tratar erros de autenticação. Quando a sessão expira, o usuário é redirecionado para a tela de login.
+
+As requisições passam pelas rotas de API do Next.js, que fazem a ponte com o backend em NestJS, onde ficam as regras de negócio e o acesso ao banco de dados.
+
+Essa organização deixa o projeto mais limpo, fácil de entender e mais simples de evoluir com o tempo.
 
 ## Como rodar o projeto
 
