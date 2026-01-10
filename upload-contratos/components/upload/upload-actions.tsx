@@ -25,7 +25,7 @@ export function UploadActions({
     <div className="flex flex-col sm:flex-row gap-3">
       <Button
         onClick={onUpload}
-        disabled={!file || isUploading || success}
+        disabled={!file || isUploading || success || hasErrors}
         className="flex-1 h-10 sm:h-11"
         variant={hasErrors ? "destructive" : "default"}
       >
@@ -37,7 +37,7 @@ export function UploadActions({
         ) : hasErrors ? (
           <>
             <AlertTriangle className="w-4 h-4 mr-2" />
-            Fazer Upload Mesmo Assim
+            Arquivo inválido, tente novamente
           </>
         ) : (
           <>
