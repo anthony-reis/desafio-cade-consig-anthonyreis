@@ -6,7 +6,7 @@ import { UploadMessages } from "@/components/upload/upload-messages";
 import { UploadActions } from "@/components/upload/upload-actions";
 import { UploadInstructions } from "@/components/upload/upload-instructions";
 import { CSVPreview } from "@/components/upload/csv-preview";
-import { useUploadContrato } from "@/lib/hooks/use-upload-contrato";
+import { useUploadContrato } from "@/hooks/use-upload-contrato";
 
 export default function UploadPage() {
   const {

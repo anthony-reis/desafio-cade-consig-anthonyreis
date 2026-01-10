@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogOut, User, Upload } from "lucide-react";
-import { useCurrentUser } from "@/lib/hooks/use-current-user";
-import { useAuth } from "@/lib/hooks/use-auth";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { useAuth } from "@/hooks/use-auth";
 import { LogoComponent } from "./logo";
 
 export function Header() {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useContratos } from "@/lib/hooks/use-contratos";
-import { useContratosFilters } from "@/lib/hooks/use-contratos-filters";
+import { useContratos } from "@/hooks/use-contratos";
+import { useContratosFilters } from "@/hooks/use-contratos-filters";
 import { ContratosHeader } from "@/components/contratos/contratos-header";
 import { ContratosFilters } from "@/components/contratos/contratos-filters";
 import { ContratosTable } from "@/components/contratos/contratos-table";
