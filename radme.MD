@@ -1,0 +1,144 @@
+# Desafio Cadê Consig — Solução (Frontend)
+
+Este repositório contém minha solução para o desafio “Desafio Cadeconsig - Desenvolvedor Full Stack”, com foco no frontend em Next.js 15 consumindo os endpoints do backend fornecido.
+
+A entrega segue a estrutura solicitada, com a pasta `upload-contratos` contendo o projeto do frontend e o currículo na raiz do repositório.
+
+## O que foi entregue (requisitos do desafio)
+
+### Estrutura obrigatória (3º ponto)
+
+- Repositório público no GitHub com o nome `desafio-cade-consig-anthonyreis`.
+- Pasta `upload-contratos` contendo o projeto frontend.
+- Currículo atualizado na raiz (`Anthony_Desenvolvedor.pdf`).
+- Commits seguindo o padrão Conventional Commits (ex.: `feat:`, `chore:`, `style:`).
+
+### Stack obrigatória (2º ponto)
+
+- Next.js 15 + App Router.
+- TypeScript.
+- Tailwind CSS.
+- Shadcn UI.
+- React Hook Form + Zod (validação).
+- React Query (TanStack Query) para cache, loading states e revalidação.
+- Nuqs para lidar com parâmetros via URL (filtros/paginação).
+
+### Telas obrigatórias
+
+- Tela de Login com autenticação via API e validação completa.
+- Tela de Upload de CSV com feedback visual (sucesso/erro).
+- Tela de Listagem de Contratos com filtros e paginação.
+
+## Visão geral da solução
+
+A aplicação foi construída em Next.js (App Router) e organiza as rotas em dois grupos principais: rotas públicas (ex.: login) e rotas privadas (dashboard/listagem e upload).
+
+A comunicação com o backend é feita através de Route Handlers em `app/api/*`, que atuam como um “BFF” (Backend for Frontend): eles validam a sessão e encaminham as requisições para o backend Nest, anexando o token no header `Authorization`.
+
+## Fluxo de autenticação e segurança com Iron Session
+
+A autenticação foi implementada com **iron-session** para evitar armazenar JWT no `localStorage` e manter o token fora do alcance do JavaScript no navegador.[web:2]
+
+### Como o token é salvo (login)
+
+1. O formulário de login valida `usuario` e `senha` com React Hook Form + Zod antes do envio.
+2. O frontend chama o endpoint do próprio Next: `POST /api/auth/login`.
+3. Esse route handler faz um `fetch` para o backend em `POST /login` e recebe `access_token`.
+4. O token é decodificado para obter dados do usuário (ex.: `sub` e `usuario`) e então é salvo na sessão: `session.accessToken = accessToken` e `session.isLoggedIn = true`, seguido de `await session.save()`.
+5. Ao salvar, o iron-session “sela” os dados da sessão e os persiste em um cookie no navegador. [web:2]
+
+### Onde o token fica armazenado
+
+O `accessToken` fica armazenado no cookie de sessão configurado como `cookieName: "auth_session"`, com `httpOnly: true`, `sameSite: "strict"` e `secure` em produção, o que reduz o risco de vazamento por XSS e restringe o envio do cookie em cenários cross-site.[web:2]
+
+O segredo de criptografia/assinatura do cookie vem de `process.env.SESSION_SECRET`, e a sessão tem `maxAge` configurado para 24 horas.
+
+### Como o token é utilizado nas requisições autenticadas
+
+Nas rotas privadas, quando a aplicação precisa consultar contratos ou fazer upload, ela chama endpoints internos do Next (ex.: `/api/contratos` e `/api/contratos/upload`).
+
+Esses route handlers:
+
+- Carregam a sessão via `getIronSession(cookies(), sessionOptions)` e validam `session.isLoggedIn` e `session.accessToken`.
+- Encaminham a requisição ao backend adicionando `Authorization: Bearer ${session.accessToken}`.
+
+Na prática:
+
+- `GET /api/contratos` repassa filtros e paginação via query string e injeta o `Bearer token` no header.
+- `POST /api/contratos/upload` repassa o `FormData` do CSV e injeta o `Bearer token` no header.
+
+### Logout
+
+O logout chama `POST /api/auth/logout`, que executa `session.destroy()` para invalidar a sessão e remover o cookie do usuário.
+
+### Por que essa abordagem é mais segura do que localStorage
+
+- Cookies `httpOnly` não podem ser lidos por JavaScript, então mesmo que exista uma falha XSS, o token não fica acessível via `window.localStorage`/`document.cookie`. [web:2]
+- A sessão é “stateless” e baseada em cookie (sem necessidade de banco para sessão), mantendo a implementação simples e adequada para o desafio. [web:2]
+
+## BFF (Route Handlers) e integração com o backend
+
+A aplicação usa Route Handlers do Next como camada intermediária, principalmente por dois motivos:
+
+1. Centralizar autenticação (sessão) e evitar espalhar token no client.
+2. Garantir que chamadas autenticadas sempre passem por um ponto único que injeta `Authorization`.
+
+Endpoints internos relevantes:
+
+- `POST /api/auth/login`: autentica e salva sessão com `accessToken`.
+- `GET /api/auth/me`: retorna o usuário atual a partir da sessão.
+- `POST /api/auth/logout`: destrói a sessão.
+- `GET /api/contratos`: lista contratos e repassa query params.
+- `POST /api/contratos/upload`: faz upload do CSV via `multipart/form-data`.
+
+Observação: no código atual, os route handlers encaminham para `http://localhost:3000/login`, `http://localhost:3000/contratos` e `http://localhost:3000/contratos/upload`.
+
+## Listagem: filtros, paginação e URL (Nuqs)
+
+A tela de listagem utiliza um hook dedicado para filtros e paginação, e o estado é sincronizado com a URL usando Nuqs (com `NuqsAdapter` habilitado no provider global).
+
+Isso permite:
+
+- Compartilhar URL com filtros aplicados.
+- Persistir filtros/página ao recarregar a página.
+- Melhor experiência com navegação (voltar/avançar).
+
+## Formulários e validação (React Hook Form + Zod)
+
+O formulário de login usa:
+
+- `useForm` do React Hook Form com `zodResolver(loginSchema)`.
+- `loginSchema` define validações mínimas (usuario obrigatório e senha com mínimo de caracteres) e fornece tipagem inferida (`LoginInput`).
+
+Além disso, o botão de submit é desabilitado durante loading e o erro é exibido de forma clara quando presente.
+
+## React Query (TanStack Query)
+
+A aplicação usa React Query para padronizar fetch e estados assíncronos no frontend, com `QueryClientProvider` configurado globalmente.
+
+A configuração inclui `staleTime` e desabilita `refetchOnWindowFocus` para evitar recarregamentos inesperados durante navegação.
+
+## Como rodar o projeto
+
+### Pré-requisitos
+
+- Node.js 18+.
+- Backend do desafio rodando localmente e acessível pelos endpoints utilizados.
+
+### Instalação
+
+```bash
+git clone https://github.com/anthony-reis/desafio-cade-consig-anthonyreis.git
+cd desafio-cade-consig-anthonyreis/upload-contratos
+npm install
+npm run dev
+```
+
+## Variáveis de ambiente
+
+A sessão depende de `SESSION_SECRET` (mínimo recomendado: 32+ caracteres), pois ela é a chave usada para selar/descriptografar o cookie do iron-session.
+
+Exemplo (.env.local):
+
+- `SESSION_SECRET` = "coloque-aqui-uma-string-grande-e-segura-com-32-caracteres-ou-mais"
+- `NODE_ENV` = "development"
