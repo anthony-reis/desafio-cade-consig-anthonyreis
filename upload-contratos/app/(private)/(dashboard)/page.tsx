@@ -13,14 +13,12 @@ export default function Home() {
   const {
     status,
     filtros,
-    inputPesquisa,
     page,
     limit,
     contratosPaginados,
     total,
     totalPaginas,
     handleStatusChange,
-    setInputPesquisa,
     adicionarFiltro,
     removerFiltro,
     setPage,
@@ -42,9 +40,7 @@ export default function Home() {
         />
         <ContratosFilters
           filtros={filtros}
-          inputPesquisa={inputPesquisa}
           status={status}
-          onInputChange={setInputPesquisa}
           onAdicionarFiltro={adicionarFiltro}
           onRemoverFiltro={removerFiltro}
           onStatusChange={handleStatusChange}

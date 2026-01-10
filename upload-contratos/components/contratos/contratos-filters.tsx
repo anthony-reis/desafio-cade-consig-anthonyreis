@@ -12,13 +12,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { KeyboardEvent } from "react";
+import { KeyboardEvent, useState } from "react";
 
 interface ContratosFiltersProps {
   filtros: string[];
-  inputPesquisa: string;
   status: string;
-  onInputChange: (value: string) => void;
   onAdicionarFiltro: (value: string) => void;
   onRemoverFiltro: (value: string) => void;
   onStatusChange: (value: string) => void;
@@ -28,22 +26,28 @@ interface ContratosFiltersProps {
 
 export function ContratosFilters({
   filtros,
-  inputPesquisa,
   status,
-  onInputChange,
   onAdicionarFiltro,
   onRemoverFiltro,
   onStatusChange,
   onLimparFiltros,
   resultadosCount,
 }: ContratosFiltersProps) {
+  const [inputPesquisa, setInputPesquisa] = useState("");
+
   const temFiltrosAtivos = filtros.length > 0 || status !== "all";
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && inputPesquisa.trim()) {
       e.preventDefault();
       onAdicionarFiltro(inputPesquisa);
+      setInputPesquisa("");
     }
+  };
+
+  const handleAdicionarClick = () => {
+    onAdicionarFiltro(inputPesquisa);
+    setInputPesquisa("");
   };
 
   return (
@@ -65,7 +69,6 @@ export function ContratosFilters({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Campo de pesquisa com botão adicionar */}
           <div className="space-y-2">
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -73,7 +76,7 @@ export function ContratosFilters({
                 <Input
                   placeholder="Digite e pressione Enter para adicionar filtro..."
                   value={inputPesquisa}
-                  onChange={(e) => onInputChange(e.target.value)}
+                  onChange={(e) => setInputPesquisa(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="pl-9 pr-3"
                 />
@@ -81,40 +84,46 @@ export function ContratosFilters({
               <Button
                 size="icon"
                 variant="secondary"
-                onClick={() => onAdicionarFiltro(inputPesquisa)}
+                onClick={handleAdicionarClick}
                 disabled={!inputPesquisa.trim()}
                 className="h-10 w-10 shrink-0"
               >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-
-            {/* Exemplos */}
             <div className="hidden flex-wrap gap-2 text-xs text-gray-500 sm:flex">
               <span>Exemplos:</span>
               <button
-                onClick={() => onAdicionarFiltro("cliente")}
+                onClick={() => {
+                  onAdicionarFiltro("cliente");
+                }}
                 className="underline hover:text-gray-700"
               >
                 cliente
               </button>
               <span>•</span>
               <button
-                onClick={() => onAdicionarFiltro("50")}
+                onClick={() => {
+                  onAdicionarFiltro("50");
+                }}
                 className="underline hover:text-gray-700"
               >
                 50
               </button>
               <span>•</span>
               <button
-                onClick={() => onAdicionarFiltro("2024")}
+                onClick={() => {
+                  onAdicionarFiltro("2024");
+                }}
                 className="underline hover:text-gray-700"
               >
                 2024
               </button>
               <span>•</span>
               <button
-                onClick={() => onAdicionarFiltro("enterprise")}
+                onClick={() => {
+                  onAdicionarFiltro("enterprise");
+                }}
                 className="underline hover:text-gray-700"
               >
                 enterprise
@@ -122,7 +131,6 @@ export function ContratosFilters({
             </div>
           </div>
 
-          {/* Filtros ativos em chips */}
           {filtros.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {filtros.map((filtro) => (
@@ -143,7 +151,6 @@ export function ContratosFilters({
             </div>
           )}
 
-          {/* Select de status */}
           <Select value={status} onValueChange={onStatusChange}>
             <SelectTrigger>
               <SelectValue placeholder="Status" />

@@ -1,22 +1,29 @@
-import { useState, useMemo } from "react";
+import {
+  useQueryStates,
+  parseAsInteger,
+  parseAsString,
+  parseAsArrayOf,
+} from "nuqs";
+import { useMemo } from "react";
 import { type Contrato } from "./use-contratos";
 
 export function useContratosFilters(contratos: Contrato[]) {
-  const [status, setStatus] = useState<string>("all");
-  const [filtros, setFiltros] = useState<string[]>([]); // Array de filtros
-  const [inputPesquisa, setInputPesquisa] = useState(""); // Input temporário
-  const [page, setPage] = useState(1);
+  const [params, setParams] = useQueryStates({
+    status: parseAsString.withDefault("all"),
+    filtros: parseAsArrayOf(parseAsString).withDefault([]),
+    page: parseAsInteger.withDefault(1),
+  });
+
+  const { status, filtros, page } = params;
   const limit = 20;
 
   const contratosFiltrados = useMemo(() => {
     let resultados = [...contratos];
 
-    // Filtro de status
     if (status !== "all") {
       resultados = resultados.filter((c) => c.status === status);
     }
 
-    // Aplica TODOS os filtros (AND)
     if (filtros.length > 0) {
       resultados = resultados.filter((c) => {
         return filtros.every((termo) => {
@@ -26,6 +33,7 @@ export function useContratosFilters(contratos: Contrato[]) {
           if (c.email_cliente.toLowerCase().includes(termoLower)) return true;
           if (c.tipo_plano.toLowerCase().includes(termoLower)) return true;
           if (c.status.toLowerCase().includes(termoLower)) return true;
+
           const valorNumerico = parseFloat(c.valor_mensal);
           if (c.valor_mensal.includes(termoLower)) return true;
           if (valorNumerico.toString().includes(termoLower)) return true;
@@ -62,34 +70,43 @@ export function useContratosFilters(contratos: Contrato[]) {
 
   const adicionarFiltro = (termo: string) => {
     if (!termo.trim()) return;
-    if (filtros.includes(termo.trim())) return; // Evita duplicados
+    if (filtros.includes(termo.trim())) return;
 
-    setFiltros([...filtros, termo.trim()]);
-    setInputPesquisa("");
-    setPage(1);
+    setParams({
+      filtros: [...filtros, termo.trim()],
+      page: 1,
+    });
   };
 
   const removerFiltro = (termo: string) => {
-    setFiltros(filtros.filter((f) => f !== termo));
-    setPage(1);
+    setParams({
+      filtros: filtros.filter((f) => f !== termo),
+      page: 1,
+    });
   };
 
   const handleStatusChange = (newStatus: string) => {
-    setStatus(newStatus);
-    setPage(1);
+    setParams({
+      status: newStatus,
+      page: 1,
+    });
   };
 
   const limparFiltros = () => {
-    setStatus("all");
-    setFiltros([]);
-    setInputPesquisa("");
-    setPage(1);
+    setParams({
+      status: "all",
+      filtros: [],
+      page: 1,
+    });
+  };
+
+  const setPage = (newPage: number) => {
+    setParams({ page: newPage });
   };
 
   return {
     status,
     filtros,
-    inputPesquisa,
     page,
     limit,
     contratosFiltrados,
@@ -97,7 +114,6 @@ export function useContratosFilters(contratos: Contrato[]) {
     total,
     totalPaginas,
     handleStatusChange,
-    setInputPesquisa,
     adicionarFiltro,
     removerFiltro,
     setPage,
