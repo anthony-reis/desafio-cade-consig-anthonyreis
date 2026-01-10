@@ -126,7 +126,7 @@ O fluxo funciona assim:\
 → Service\
 → Axios\
 → API do Next.js (/api)\
-→ Backend NestJS\
+→ Backend NestJS
 
 Os componentes React cuidam apenas da tela. Eles mostram os dados e reagem às ações do usuário, sem fazer chamadas diretas para a API.
 
@@ -139,6 +139,56 @@ O Axios é configurado em um único lugar, com interceptors para tratar erros de
 As requisições passam pelas rotas de API do Next.js, que fazem a ponte com o backend em NestJS, onde ficam as regras de negócio e o acesso ao banco de dados.
 
 Essa organização deixa o projeto mais limpo, fácil de entender e mais simples de evoluir com o tempo.
+
+## Como as requisições funcionam
+
+A ideia é: o **frontend (React)** não conversa direto com o backend NestJS.  
+Ele chama os endpoints internos do **Next.js em `/api/...`**, e o Next faz o “meio de campo”.
+
+### O que é cada parte
+
+- **BFF (Route Handlers do Next em `app/api/*`)**: são rotas no servidor do Next que recebem as chamadas do frontend e repassam para o NestJS. Aqui é onde a autenticação fica centralizada.
+- **iron-session (sessão)**: guarda o `accessToken` (JWT) **no cookie de sessão**, de forma que o token não fica “solto” no código do navegador.
+- **Axios (`lib/api/client.ts`)**: é o “cliente HTTP” usado para chamar `/api/...` com configurações prontas (baseURL, timeout, interceptors).
+- **Services (`lib/services/*`)**: funções que encapsulam chamadas (ex.: `userService.login()`), evitando repetir URL/método em vários lugares.
+- **Custom hooks (`lib/hooks/use-*`)**: juntam “lógica de tela” + services (loading, error, toast, navegação, React Query).
+
+---
+
+## Como é o fluxo?
+
+Pense assim: sua tela (React) conversa com o **Next.js** em `/api/*`, e o Next.js conversa com o backend (NestJS).  
+Isso deixa o Next como um “porteiro”: ele controla quem pode entrar e leva a mensagem pro backend.
+
+### 1) Fluxo do Login (primeira vez)
+
+1. Você digita usuário e senha e clica em **Entrar**.
+2. A tela chama um **hook** (`useAuth`), que é só um “organizador” da lógica (loading, erro e sucesso).
+3. O hook chama um **service** (`userService.login`), que é só uma função responsável por “falar com a API”.
+4. O service usa o **Axios** para chamar `POST /api/auth/login` (rota do Next).
+5. O **Route Handler** (BFF) do Next chama o backend NestJS (`POST /login`) usando `fetch`.
+6. Se o backend aceitar, ele devolve um token (JWT) e o Next salva isso na sessão (iron-session) dentro de um cookie seguro.
+7. A tela recebe “ok” e te manda para a Home.
+
+### 2) Fluxo do GET Contratos (já logado)
+
+1. A tela chama um hook (`useContratos`) para buscar os contratos.
+2. O hook chama um service (`contratoService.listar`).
+3. O service usa Axios para chamar `GET /api/contratos`.
+4. O navegador envia junto o cookie da sessão automaticamente porque o Axios está com `withCredentials: true`.
+5. O Route Handler (BFF) do Next lê a sessão, pega o token e chama o backend NestJS (`GET /contratos`) usando `fetch` + `Authorization: Bearer <token>`.
+6. O backend valida o token e devolve os contratos; o Next repassa para a tela.
+
+---
+
+## Por que usar Axios na tela?
+
+O Axios ajuda a deixar todas as requisições padronizadas num lugar só (ex.: `baseURL`, `timeout`, `withCredentials`).
+E os **interceptors** permitem tratar coisas globais (ex.: se der 401, redirecionar pro login) sem repetir esse código em todo componente.
+
+## Por que usar `fetch` no BFF (Route Handlers)?
+
+Route Handlers do Next trabalham com as APIs padrão da Web (`Request`/`Response`), então usar `fetch` ali é direto e combina com o ambiente do Next.
 
 ## Como rodar o projeto
 
