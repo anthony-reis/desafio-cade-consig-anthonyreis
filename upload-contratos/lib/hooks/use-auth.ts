@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { userService } from "@/lib/services/user-service";
 import { LoginInput } from "../types/auth";
 import { toast } from "sonner";
+import { set } from "zod";
 
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +24,7 @@ export function useAuth() {
       const message = err.response?.data?.error || "Credenciais inválidas";
       setError(message);
       toast.error("Erro ao fazer login: " + message);
+      setIsLoading(false);
       throw err;
     }
   };
