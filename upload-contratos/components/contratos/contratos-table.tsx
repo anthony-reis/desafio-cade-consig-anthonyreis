@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 import { type Contrato } from "@/lib/hooks/use-contratos";
+import { TableSkeleton, CardsSkeleton } from "./contratos-table-skeleton";
 
 interface ContratosTableProps {
   contratos: Contrato[];
@@ -67,13 +67,10 @@ export function ContratosTable({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-0">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-          </div>
-        </CardContent>
-      </Card>
+      <>
+        <TableSkeleton />
+        <CardsSkeleton />
+      </>
     );
   }
 
@@ -81,11 +78,11 @@ export function ContratosTable({
     return (
       <Card>
         <CardContent className="p-0">
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500 px-4">
-            <p className="text-base sm:text-lg font-medium text-center">
+          <div className="flex flex-col items-center justify-center h-64 px-4 text-gray-500">
+            <p className="text-base font-medium text-center sm:text-lg">
               Nenhum contrato encontrado
             </p>
-            <p className="text-xs sm:text-sm mt-1 text-center">
+            <p className="mt-1 text-center text-xs sm:text-sm">
               {emptyMessage}
             </p>
           </div>
@@ -96,7 +93,6 @@ export function ContratosTable({
 
   return (
     <>
-      {/* Desktop Table */}
       <Card className="hidden md:block">
         <CardContent className="p-0">
           <Table>
@@ -140,17 +136,16 @@ export function ContratosTable({
         </CardContent>
       </Card>
 
-      {/* Mobile Cards */}
-      <div className="md:hidden space-y-3">
+      <div className="space-y-3 md:hidden">
         {contratos.map((contrato) => (
           <Card key={contrato.id_contrato}>
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
                     {contrato.nome_cliente}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="truncate text-xs text-gray-500">
                     {contrato.email_cliente}
                   </p>
                 </div>
@@ -164,20 +159,20 @@ export function ContratosTable({
 
               <div className="flex items-center justify-between text-sm">
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Plano</p>
+                  <p className="mb-1 text-xs text-gray-500">Plano</p>
                   <Badge variant={getPlanoVariant(contrato.tipo_plano)}>
                     {contrato.tipo_plano}
                   </Badge>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500">Valor</p>
-                  <p className="font-semibold mt-1">
+                  <p className="mt-1 font-semibold">
                     {formatarValor(parseFloat(contrato.valor_mensal))}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-2 border-t">
+              <div className="border-t pt-2">
                 <p className="text-xs text-gray-500">
                   Início: {formatarData(contrato.data_inicio)}
                 </p>
