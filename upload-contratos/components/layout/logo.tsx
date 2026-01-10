@@ -7,7 +7,7 @@ export function LogoComponent() {
     <div className="flex items-center">
       <Image
         src="/logo.png"
-        alt="Cade Consig Logo"
+        alt="Cadê Consig Logo"
         width={40}
         height={40}
         unoptimized

@@ -44,7 +44,7 @@ export function Header() {
         >
           <LogoComponent />
           <span className="font-semibold text-base sm:text-lg hidden sm:inline">
-            Cade Consig
+            Cadê Consig
           </span>
         </div>
 

@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Cade Consig",
+  title: "Cadê Consig",
   description: "Gestão de Contratos",
 };
 
