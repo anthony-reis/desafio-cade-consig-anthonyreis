@@ -203,3 +203,5 @@ Exemplo (.env.local):
 
 - `SESSION_SECRET` = "coloque-aqui-uma-string-grande-e-segura-com-32-caracteres-ou-mais"
 - `NODE_ENV` = "development"
+
+### Nota 100 no google Lighthouse 👌
