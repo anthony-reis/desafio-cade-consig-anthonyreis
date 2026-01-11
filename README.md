@@ -51,7 +51,7 @@ A autenticação foi implementada com **iron-session** para evitar armazenar JWT
 
 O `accessToken` fica armazenado no cookie de sessão configurado como `cookieName: "auth_session"`, com `httpOnly: true`, `sameSite: "strict"` e `secure` em produção, o que reduz o risco de vazamento por XSS e restringe o envio do cookie em cenários cross-site.
 
-O segredo de criptografia/assinatura do cookie vem de `process.env.SESSION_SECRET`, e a sessão tem `maxAge` configurado para 24 horas.
+O segredo de criptografia/assinatura do cookie vem de `process.env.SESSION_SECRET`, e a sessão tem `maxAge` configurado para durar durante a sessão.
 
 ### Como o token é utilizado nas requisições autenticadas
 
