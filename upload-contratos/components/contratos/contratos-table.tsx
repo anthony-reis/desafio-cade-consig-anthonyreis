@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { type Contrato } from "@/hooks/use-contratos";
+import { type Contrato } from "@/lib/types/contract";
 import { TableSkeleton, CardsSkeleton } from "./contratos-table-skeleton";
 
 interface ContratosTableProps {
