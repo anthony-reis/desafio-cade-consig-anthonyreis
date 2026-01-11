@@ -43,7 +43,7 @@ A autenticação foi implementada com **iron-session** para evitar armazenar JWT
 
 1. O formulário de login valida `usuario` e `senha` com React Hook Form + Zod antes do envio.
 2. O frontend chama o endpoint do próprio Next: `POST /api/auth/login`.
-3. Esse route handler faz um `fetch` para o backend em `POST /login` e recebe `access_token`.
+3. Esse route handler faz uma `req` para o backend em `POST /login` e recebe `access_token`.
 4. O token é decodificado para obter dados do usuário (ex.: `sub` e `usuario`) e então é salvo na sessão: `session.accessToken = accessToken` e `session.isLoggedIn = true`, seguido de `await session.save()`.
 5. Ao salvar, o iron-session “sela” os dados da sessão e os persiste em um cookie no navegador.
 
@@ -166,7 +166,7 @@ Isso deixa o Next como um “porteiro”: ele controla quem pode entrar e leva a
 2. A tela chama um **hook** (`useAuth`), que é só um “organizador” da lógica (loading, erro e sucesso).
 3. O hook chama um **service** (`userService.login`), que é só uma função responsável por “falar com a API”.
 4. O service usa o **Axios** para chamar `POST /api/auth/login` (rota do Next).
-5. O **Route Handler** (BFF) do Next chama o backend NestJS (`POST /login`) usando `fetch`.
+5. O **Route Handler** (BFF) do Next chama o backend NestJS (`POST /login`) usando `axios`.
 6. Se o backend aceitar, ele devolve um token (JWT) e o Next salva isso na sessão (iron-session) dentro de um cookie seguro.
 7. A tela recebe “ok” e te manda para a Home.
 
@@ -176,19 +176,8 @@ Isso deixa o Next como um “porteiro”: ele controla quem pode entrar e leva a
 2. O hook chama um service (`contratoService.listar`).
 3. O service usa Axios para chamar `GET /api/contratos`.
 4. O navegador envia junto o cookie da sessão automaticamente porque o Axios está com `withCredentials: true`.
-5. O Route Handler (BFF) do Next lê a sessão, pega o token e chama o backend NestJS (`GET /contratos`) usando `fetch` + `Authorization: Bearer <token>`.
+5. O Route Handler (BFF) do Next lê a sessão, pega o token e chama o backend NestJS (`GET /contratos`) usando `axios` + `Authorization: Bearer <token>`.
 6. O backend valida o token e devolve os contratos; o Next repassa para a tela.
-
----
-
-## Por que usar Axios na tela?
-
-O Axios ajuda a deixar todas as requisições padronizadas num lugar só (ex.: `baseURL`, `timeout`, `withCredentials`).
-E os **interceptors** permitem tratar coisas globais (ex.: se der 401, redirecionar pro login) sem repetir esse código em todo componente.
-
-## Por que usar `fetch` no BFF (Route Handlers)?
-
-Route Handlers do Next trabalham com as APIs padrão da Web (`Request`/`Response`), então usar `fetch` ali é direto e combina com o ambiente do Next.
 
 ## Como rodar o projeto
 
