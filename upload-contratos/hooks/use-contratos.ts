@@ -2,18 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { contratosService } from "@/lib/services/contratos-service";
 import { toast } from "sonner";
 
-export interface Contrato {
-  id_contrato: string;
-  nome_cliente: string;
-  email_cliente: string;
-  tipo_plano: string;
-  valor_mensal: string;
-  status: string;
-  data_inicio: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export function useContratos() {
   return useQuery({
     queryKey: ["contratos"],

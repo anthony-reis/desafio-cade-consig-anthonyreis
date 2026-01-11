@@ -30,7 +30,6 @@ export function useUploadContrato() {
       setParsedData([]);
       setShowPreview(false);
 
-      // Auto parse
       parseCSV(selectedFile);
     }
   }

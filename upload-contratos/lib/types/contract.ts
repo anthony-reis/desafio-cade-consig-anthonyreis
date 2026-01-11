@@ -39,3 +39,15 @@ export interface ParsedRow {
   errors: Record<string, string>;
   rowIndex: number;
 }
+
+export interface Contrato {
+  id_contrato: string;
+  nome_cliente: string;
+  email_cliente: string;
+  tipo_plano: string;
+  valor_mensal: string;
+  status: string;
+  data_inicio: string;
+  created_at: string;
+  updated_at: string;
+}

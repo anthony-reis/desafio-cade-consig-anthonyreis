@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { userService } from "@/lib/services/user-service";
-import { LoginInput } from "../types/auth";
 import { toast } from "sonner";
-import { set } from "zod";
+import { LoginInput } from "@/lib/types/auth";
 
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);

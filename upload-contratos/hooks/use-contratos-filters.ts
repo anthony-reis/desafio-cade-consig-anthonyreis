@@ -5,7 +5,7 @@ import {
   parseAsArrayOf,
 } from "nuqs";
 import { useMemo } from "react";
-import { type Contrato } from "./use-contratos";
+import { type Contrato } from "@/lib/types/contract";
 
 export function useContratosFilters(contratos: Contrato[]) {
   const [params, setParams] = useQueryStates({
