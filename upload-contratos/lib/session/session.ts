@@ -10,11 +10,12 @@ export interface SessionData {
 export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET as string,
   cookieName: "auth_session",
+  ttl: 0,
   cookieOptions: {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 60 * 60 * 24,
+    maxAge: undefined,
     path: "/",
   },
 };
